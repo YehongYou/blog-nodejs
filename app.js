@@ -15,7 +15,8 @@ var Comment = require("./models/comment");
 
 
 // setup app
-mongoose.connect("mongodb://localhost/blog_db",{useMongoClient: true});
+// mongoose.connect("mongodb://localhost/blog_db",{useMongoClient: true});
+mongoose.connect("mongodb://leo:880810youyehong@ds023478.mlab.com:23478/my_blog");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
