@@ -5,7 +5,8 @@ var express    = require("express"),
     passport    = require("passport"),
     LocalStrategy = require("passport-local"),
     methodOverride = require("method-override"),
-    middleware = require("./middleware/index");
+    middleware = require("./middleware/index"),
+    flash       = require("connect-flash");
 
 // import models
 var Post = require("./models/post");
@@ -19,6 +20,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
 app.use(methodOverride("_method"));
+app.use(flash());
 
 // passport configuration
 app.use(require("express-session")({
@@ -34,10 +36,10 @@ passport.deserializeUser(User.deserializeUser());
 
 app.use(function(req, res, next){
    res.locals.currentUser = req.user;
-   console.log("============");
-   console.log(req.user);
-  //  res.locals.error = req.flash("error");
-  //  res.locals.success = req.flash("success");
+   console.log("=================");
+   console.log(res.locals);
+   res.locals.error = req.flash("error");
+   res.locals.success = req.flash("success");
    next();
 });
 
@@ -53,13 +55,13 @@ app.get("/signup", function(req,res){
      // create a new user and using passportJS
 app.post("/signup", function(req, res){
     var newUser = new User({username: req.body.username});
-    User.register(newUser, req.body.password, function(err, user){
+    User.register(newUser, req.body.password, function(err, newuser){
         if(err){
-            // req.flash("error", err.message);
+            req.flash("error", err.message);
           return res.render("signup");
         }
         passport.authenticate("local")(req, res, function(){
-          //  req.flash("success", "Welcome to YelpCamp " + user.username);
+           req.flash("success", "Welcome to Leo Blog " + newuser.username);
            res.redirect("/posts");
         });
     });
@@ -67,6 +69,7 @@ app.post("/signup", function(req, res){
 
 // go the login page
 app.get("/login", function(req, res){
+    console.log(res.locals);
     res.render("login");
 });
 
@@ -81,7 +84,7 @@ app.post("/login", passport.authenticate("local",
 // logout
 app.get("/logout", function(req, res){
    req.logout();
-  //  req.flash("success", "Logged you out!");
+   req.flash("success", "Logged you out!");
    res.redirect("/posts");
 });
 
@@ -192,7 +195,7 @@ app.post("/posts/:id/comments",middleware.isLoggedIn,function(req, res){
        } else {
         Comment.create(req.body.comment, function(err, comment){
            if(err){
-              //  req.flash("error", "Something went wrong");
+               req.flash("error", "Something wrong");
                console.log(err);
            } else {
                //add username and id to comment
@@ -202,7 +205,7 @@ app.post("/posts/:id/comments",middleware.isLoggedIn,function(req, res){
                comment.save();
                post.comments.push(comment);
                post.save();
-              //  req.flash("success", "Successfully added comment");
+               req.flash("success", "Successfully added comment");
                res.redirect('/posts/' + post._id);
            }
         });
@@ -238,7 +241,7 @@ app.delete("/posts/:id/comments/:comment_id", middleware.checkCommentOwnership, 
        if(err){
            res.redirect("back");
        } else {
-          //  req.flash("success", "Comment deleted");
+           req.flash("success", "Comment deleted");
            res.redirect("/posts/" + req.params.id);
        }
     });
